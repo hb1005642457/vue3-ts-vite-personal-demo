@@ -3,7 +3,7 @@
  * @Author: hanb
  * @Date: 2022-03-01 09:34:40
  * @LastEditors: hanb
- * @LastEditTime: 2022-03-01 09:39:35
+ * @LastEditTime: 2022-03-01 18:42:04
  */
 module.exports = {
   root: true,
@@ -102,7 +102,7 @@ module.exports = {
     // 强制使用一致的缩进
     indent: "off",
     // 强制在 JSX 属性中一致地使用双引号或单引号
-    // 'jsx-quotes': 'warn',
+    "jsx-quotes": "warn",
     // 强制可嵌套的块的最大深度4
     "max-depth": "warn",
     // 强制最大行数 300

@@ -3,14 +3,29 @@
  * @Author: hanb
  * @Date: 2022-02-28 16:45:32
  * @LastEditors: hanb
- * @LastEditTime: 2022-03-01 10:51:29
+ * @LastEditTime: 2022-04-25 16:57:17
 -->
 <script setup lang="ts">
+import { testApi } from "../api/index";
 import { ref } from "vue";
+import { useRouter, useRoute } from "vue-router";
 
 defineProps<{ msg: string }>();
+testApi().then((res: any): void => {
+  console.log(res, 123);
+});
 
 const count = ref(0);
+const router = useRouter();
+const route = useRoute();
+const routeTo = (): void => {
+  router.push({
+    name: "login",
+    query: {
+      ...route.query,
+    },
+  });
+};
 </script>
 
 <template>
@@ -38,6 +53,7 @@ const count = ref(0);
     Edit
     <code>components/HelloWorld.vue</code> to test hot module replacement.
   </p>
+  <a @click="routeTo">去login</a>
 </template>
 
 <style scoped lang="scss">
