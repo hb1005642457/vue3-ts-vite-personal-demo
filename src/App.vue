@@ -1,31 +1,88 @@
-<!--
- * @Descripttion: 
- * @Author: hanb
- * @Date: 2022-02-28 16:45:32
- * @LastEditors: hanb
- * @LastEditTime: 2022-04-25 17:45:57
--->
-<script setup lang="ts">
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
-// import HelloWorld from "./components/HelloWorld.vue";
-// import SetupTest from "./components/SetupTest.vue";
-</script>
-
 <template>
-  <!-- <img alt="Vue logo" src="./assets/logo.png" /> -->
-  <!-- <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" /> -->
-  <!-- <SetupTest></SetupTest> -->
-  <router-view></router-view>
+  <NConfigProvider
+    v-if="!isLock"
+    :locale="zhCN"
+    :theme="getDarkTheme"
+    :theme-overrides="getThemeOverrides"
+    :date-locale="dateZhCN"
+  >
+    <AppProvider>
+      <RouterView />
+    </AppProvider>
+  </NConfigProvider>
+
+  <transition v-if="isLock && $route.name !== 'login'" name="slide-up">
+    <LockScreen />
+  </transition>
 </template>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+<script lang="ts" setup>
+import { computed, onMounted, onUnmounted } from "vue";
+import { zhCN, dateZhCN, darkTheme } from "naive-ui";
+import { LockScreen } from "@/components/Lockscreen";
+import { AppProvider } from "@/components/Application";
+import { useLockscreenStore } from "@/store/modules/lockscreen";
+import { useRoute } from "vue-router";
+import { useDesignSettingStore } from "@/store/modules/designSetting";
+import { lighten } from "@/utils/index";
+
+const route = useRoute();
+const useLockscreen = useLockscreenStore();
+const designStore = useDesignSettingStore();
+const isLock = computed(() => useLockscreen.isLock);
+const lockTime = computed(() => useLockscreen.lockTime);
+
+/**
+ * @type import('naive-ui').GlobalThemeOverrides
+ */
+const getThemeOverrides = computed(() => {
+  const appTheme = designStore.appTheme;
+  const lightenStr = lighten(designStore.appTheme, 6);
+  return {
+    common: {
+      primaryColor: appTheme,
+      primaryColorHover: lightenStr,
+      primaryColorPressed: lightenStr,
+    },
+    LoadingBar: {
+      colorLoading: appTheme,
+    },
+  };
+});
+
+const getDarkTheme = computed(() =>
+  designStore.darkTheme ? darkTheme : undefined
+);
+
+let timer;
+
+const timekeeping = () => {
+  clearInterval(timer);
+  if (route.name == "login" || isLock.value) return;
+  // 设置不锁屏
+  useLockscreen.setLock(false);
+  // 重置锁屏时间
+  useLockscreen.setLockTime();
+  timer = setInterval(() => {
+    // 锁屏倒计时递减
+    useLockscreen.setLockTime(lockTime.value - 1);
+    if (lockTime.value <= 0) {
+      // 设置锁屏
+      useLockscreen.setLock(true);
+      return clearInterval(timer);
+    }
+  }, 1000);
+};
+
+onMounted(() => {
+  document.addEventListener("mousedown", timekeeping);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("mousedown", timekeeping);
+});
+</script>
+
+<style lang="less">
+@import "styles/index.less";
 </style>
